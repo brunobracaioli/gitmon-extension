@@ -873,38 +873,31 @@ const STYLES = `
    the .gm-sprite-img so they don't interfere with the wrapper's scaleX
    flip or the walk sheet clipping. Filters live on the wrapper so the
    drop shadow + tints still wrap around the clipped content. */
-.gm-wrap[data-state="idle"] .gm-sprite-img {
-  /* Idle is fully static — any loop here steals peripheral attention
-     from the user's code. Vitals states (happy/hungry/critical/sleeping)
-     still animate so they remain readable. */
+/* When the sprite is not actively being dragged or wandering, it must
+   be 100% still — any loop steals peripheral attention from the user's
+   code. Vitals states still set data-state so the color filters below
+   communicate status; only the motion is stripped. Hatching keeps its
+   wobble (brief event, not a sustained state) and walking keeps the
+   3-frame cycle (core feature). */
+.gm-wrap[data-state="idle"] .gm-sprite-img,
+.gm-wrap[data-state="happy"] .gm-sprite-img,
+.gm-wrap[data-state="hungry"] .gm-sprite-img,
+.gm-wrap[data-state="critical"] .gm-sprite-img,
+.gm-wrap[data-state="sleeping"] .gm-sprite-img,
+.gm-wrap[data-state="dead"] .gm-sprite-img {
   animation: none;
-}
-.gm-wrap[data-state="happy"] .gm-sprite-img {
-  animation: gm-bounce 0.9s ease-in-out infinite;
 }
 .gm-wrap[data-state="happy"] .gm-sprite {
   filter: drop-shadow(0 6px 10px rgba(0,0,0,0.35)) brightness(1.12) saturate(1.2);
 }
-.gm-wrap[data-state="hungry"] .gm-sprite-img {
-  animation: gm-bob 4.2s ease-in-out infinite;
-}
 .gm-wrap[data-state="hungry"] .gm-sprite {
   filter: drop-shadow(0 6px 10px rgba(0,0,0,0.35)) saturate(0.7);
-}
-.gm-wrap[data-state="critical"] .gm-sprite-img {
-  animation: gm-jitter 0.18s linear infinite;
 }
 .gm-wrap[data-state="critical"] .gm-sprite {
   filter: drop-shadow(0 6px 10px rgba(0,0,0,0.35)) hue-rotate(-10deg) brightness(0.95);
 }
-.gm-wrap[data-state="sleeping"] .gm-sprite-img {
-  animation: gm-breath 5s ease-in-out infinite;
-}
 .gm-wrap[data-state="sleeping"] .gm-sprite {
   filter: drop-shadow(0 6px 10px rgba(0,0,0,0.35)) brightness(0.85) saturate(0.85);
-}
-.gm-wrap[data-state="dead"] .gm-sprite-img {
-  animation: none;
 }
 .gm-wrap[data-state="dead"] .gm-sprite {
   filter: drop-shadow(0 6px 10px rgba(0,0,0,0.35)) grayscale(1) opacity(0.55);
