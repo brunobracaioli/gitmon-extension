@@ -31,6 +31,13 @@ interface WanderCtx {
   wrap: HTMLElement;
   label: HTMLElement;
   resolveIdle: () => AnimationState;
+  /**
+   * Fired after the wander loop stops and data-state has been restored
+   * to the resolver's idle value. Lets the caller swap the sprite back
+   * to the static `_idle.png` (vs. the 3-frame walk sheet used while
+   * moving).
+   */
+  onStop?: () => void;
 }
 
 interface ActiveWander {
@@ -98,6 +105,9 @@ export function stopWander(): void {
   const idle = ctx.resolveIdle();
   ctx.wrap.dataset.state = idle;
   active = null;
+  // Fire callback AFTER active is cleared so the caller's isWandering()
+  // check resolves to false inside the callback.
+  ctx.onStop?.();
 }
 
 function tick(now: number): void {

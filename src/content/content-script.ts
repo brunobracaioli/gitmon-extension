@@ -249,7 +249,13 @@ function applyState(state: GitMonStateSnapshot | null): void {
   const isEgg = state.evolution_stage === 0;
   const useSleepSheet = animState === "sleeping";
   const noWalkSheet = !speciesHasWalkSheet(state.species_id);
-  const useIdlePng = isEgg || useSleepSheet || noWalkSheet;
+  // Only load the walk spritesheet while the sprite is ACTIVELY moving
+  // (user drag or autonomous wander). At rest, use the single-frame
+  // `_idle.png` so the creature is perfectly still — the walk sheet's
+  // 3 frames have subtle limb motion that reads as "swaying" even when
+  // no CSS animation is cycling them. See 2026-04-14 feedback.
+  const isActivelyMoving = isWandering() || ui.spriteWrap.classList.contains("dragging");
+  const useIdlePng = isEgg || useSleepSheet || noWalkSheet || !isActivelyMoving;
 
   const url = useIdlePng
     ? buildSpriteUrl({
@@ -572,6 +578,9 @@ function wirePointer(wrap: HTMLElement, label: HTMLElement, popup: HTMLElement):
       moved = true;
       wrap.classList.add("dragging");
       wrap.dataset.state = "walking";
+      // Swap to the walk spritesheet now that the sprite is actively
+      // moving (applyState reads the `dragging` class to pick the src).
+      if (currentState) applyState(currentState);
       // Drag overrides click — close popup if it was open from a previous click.
       if (popupOpen) closePopup();
     }
@@ -623,6 +632,11 @@ function wirePointer(wrap: HTMLElement, label: HTMLElement, popup: HTMLElement):
         wrap,
         label,
         resolveIdle: () => lastResolvedState,
+        // Wander just stopped — refresh the sprite so the img src flips
+        // back from walk sheet (288×96) to static _idle.png (96×96).
+        onStop: () => {
+          if (currentState) applyState(currentState);
+        },
       });
     }
   };
