@@ -273,15 +273,43 @@ function applyState(state: GitMonStateSnapshot | null): void {
   // but NOT for CSS `background-image: url()`. GitHub's CSP whitelists
   // only a handful of image hosts so the background-image approach
   // silently fails (image never paints). Do not refactor back.
+  //
+  // Walk-sheet → idle-png transition must be atomic. The walk sheet is
+  // 192×64 (source) painted into a 288×96 <img>; the idle PNG is 96×96.
+  // If we swap src + width synchronously the browser keeps painting the
+  // OLD walk-sheet bitmap into the now-96px <img> until the new PNG
+  // finishes decoding — all 3 frames crushed together for 1-2 frames.
+  // Preload the idle PNG and only flip src+width+sheet once it's ready.
+  const switchingToIdleSheet = useIdlePng && ui.spriteEl.dataset.sheet === "walk";
   if (ui.spriteImg.src !== url) {
-    ui.spriteImg.src = url;
+    if (switchingToIdleSheet) {
+      const preload = new Image();
+      preload.onload = () => {
+        if (!ui) return;
+        ui.spriteImg.src = url;
+        ui.spriteImg.style.width = "96px";
+        ui.spriteImg.style.height = "96px";
+        ui.spriteEl.dataset.sheet = "static";
+        // Now it's safe to kill the walk keyframe — the idle PNG is
+        // painted. Only flip if we're still nominally "walking" (user
+        // didn't start a new drag in the meantime).
+        if (ui.spriteWrap.dataset.state === "walking" && !isWandering() && !ui.spriteWrap.classList.contains("dragging")) {
+          ui.spriteWrap.dataset.state = animState;
+        }
+      };
+      preload.src = url;
+    } else {
+      ui.spriteImg.src = url;
+    }
   }
-  // For the walk sheet we render at 288×96 (3 frames of 96×96 each).
-  // The wrapping .gm-sprite div is overflow:hidden so only the frame at
-  // the current `transform: translateX(...)` offset is visible.
-  ui.spriteImg.style.width = useIdlePng ? "96px" : "288px";
-  ui.spriteImg.style.height = "96px";
-  ui.spriteEl.dataset.sheet = useIdlePng ? "static" : "walk";
+  if (!switchingToIdleSheet) {
+    // For the walk sheet we render at 288×96 (3 frames of 96×96 each).
+    // The wrapping .gm-sprite div is overflow:hidden so only the frame at
+    // the current `transform: translateX(...)` offset is visible.
+    ui.spriteImg.style.width = useIdlePng ? "96px" : "288px";
+    ui.spriteImg.style.height = "96px";
+    ui.spriteEl.dataset.sheet = useIdlePng ? "static" : "walk";
+  }
   ui.spriteEl.style.display = "block";
   ui.placeholder.style.display = "none";
   ui.zzz.style.display = animState === "sleeping" ? "block" : "none";
@@ -290,7 +318,11 @@ function applyState(state: GitMonStateSnapshot | null): void {
   // the sprite (drag or autonomous wander). The wander loop will call
   // this again via `stopWander()` when it finishes.
   const userDriven = isWandering() || (ui.spriteWrap.dataset.state === "walking" && ui.spriteWrap.classList.contains("dragging"));
-  if (!userDriven) {
+  // When switchingToIdleSheet we DEFER the data-state flip until the
+  // idle PNG preload completes (see above) — otherwise the walk CSS
+  // keyframe stops while the <img> still holds the walk sheet bitmap,
+  // producing the squished-3-frames flash.
+  if (!userDriven && !switchingToIdleSheet) {
     ui.spriteWrap.dataset.state = animState;
   }
 

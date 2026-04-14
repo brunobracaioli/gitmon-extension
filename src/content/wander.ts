@@ -102,11 +102,16 @@ export function stopWander(): void {
   if (!active) return;
   const { ctx } = active;
   if (active.rafId !== null) cancelAnimationFrame(active.rafId);
-  const idle = ctx.resolveIdle();
-  ctx.wrap.dataset.state = idle;
   active = null;
-  // Fire callback AFTER active is cleared so the caller's isWandering()
-  // check resolves to false inside the callback.
+  // Clear facing so the idle pose is neutral (not mirrored by the last
+  // walk-direction scaleX(-1)).
+  delete ctx.wrap.dataset.facing;
+  // data-state stays on "walking" here on purpose. onStop → applyState
+  // kicks off the idle-PNG preload while the walk sheet is still
+  // painted, and flips data-state to the resolved idle value ONLY after
+  // the PNG has loaded. Flipping it eagerly here would stop the CSS
+  // walk keyframe mid-cycle and expose a squished 3-frame flash while
+  // the <img> still holds the walk bitmap. See applyState preload path.
   ctx.onStop?.();
 }
 
