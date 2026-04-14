@@ -291,16 +291,20 @@ async function pullState(): Promise<GitMonStateSnapshot | null> {
     return null;
   }
 
-  const url = `${WEB_ORIGIN}/api/v1/public/gitmon/${encodeURIComponent(username)}`;
+  // Cache-bust the request. `cache: 'no-store'` below disables the
+  // browser HTTP cache but the public endpoint sets `s-maxage=300` so
+  // the Vercel edge cache can still serve a stale response for up to
+  // 5 minutes — the user notices this right after a species swap or
+  // nickname change. A minute-granular `t=` param partitions the edge
+  // key so every SW alarm tick lands a fresh miss.
+  const cacheBust = Math.floor(Date.now() / 60000);
+  const url = `${WEB_ORIGIN}/api/v1/public/gitmon/${encodeURIComponent(username)}?t=${cacheBust}`;
   log("pull:", url);
 
   let res: Response;
   try {
     res = await fetch(url, {
       headers: { Accept: "application/json" },
-      // Force a network read every minute — the public endpoint already
-      // sets s-maxage=300, but we want fresher data than that for the
-      // companion. Browser HTTP cache is bypassed via cache: 'no-store'.
       cache: "no-store",
     });
   } catch (err) {
