@@ -1,0 +1,11 @@
+node_modules/
+dist/
+dist-dev/
+*.zip
+*.log
+.DS_Store
+.env
+.env.local
+.vite/
+public/icons/*.png
+!public/icons/.gitkeep

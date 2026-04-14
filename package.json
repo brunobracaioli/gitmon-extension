@@ -1,0 +1,29 @@
+{
+  "name": "gitmon-extension",
+  "version": "1.0.0",
+  "private": true,
+  "description": "GitMon — Your Coding Pet. Chrome MV3 extension that renders your GitMon on github.com.",
+  "type": "module",
+  "scripts": {
+    "icons": "node scripts/make-placeholder-icons.mjs",
+    "dev": "vite --mode development",
+    "build": "vite build",
+    "build:dev": "vite build --mode development",
+    "typecheck": "tsc --noEmit -p tsconfig.json"
+  },
+  "dependencies": {
+    "react": "^18",
+    "react-dom": "^18"
+  },
+  "devDependencies": {
+    "@crxjs/vite-plugin": "^2.0.0-beta.25",
+    "@types/chrome": "^0.0.287",
+    "@types/node": "^20",
+    "@types/react": "^18",
+    "@types/react-dom": "^18",
+    "@vitejs/plugin-react": "^4.3.4",
+    "pngjs": "^7.0.0",
+    "typescript": "^5",
+    "vite": "^6.0.7"
+  }
+}
