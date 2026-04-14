@@ -12,7 +12,9 @@ This repo contains the **public source code of the GitMon browser extension**. T
 Coming soon. Link will appear here once store review completes.
 
 ### Option B — Load unpacked (dev mode, any Chromium browser)
-For developers, reviewers, or users who want to audit before installing:
+For developers, reviewers, or users who want to audit before installing.
+
+**Requirements:** Node 20+ and npm.
 
 ```bash
 git clone https://github.com/brunobracaioli/gitmon-extension.git
@@ -29,7 +31,23 @@ Then in Chrome / Edge / Brave / Arc:
 4. Select the `dist/` folder
 5. A purple **G** icon appears in the toolbar
 
-To actually use the extension you need a free GitMon account at [gitmon.io](https://gitmon.io). The extension authenticates via a one-time token handoff — no credentials live in the extension source.
+**Pair with your account** (required — nothing appears on github.com until this is done):
+1. Click the purple **G** icon in the toolbar to open the popup
+2. Click **Connect** — a new tab opens at [gitmon.io](https://gitmon.io)
+3. Sign in with GitHub (if you aren't already) — you'll return to `/extension/connect` automatically
+4. The page posts a one-time token back to the extension and auto-closes
+5. Visit any page on `github.com` — your gitmon should appear at the bottom-right
+
+Credentials never live in the extension source; only the short-lived OTT crosses over.
+
+### Hot-reload during development
+If you're modifying the extension source, skip `build` and use Vite's dev mode:
+
+```bash
+npm run dev        # watches src/ and rewrites dist-dev/ on save
+```
+
+Load `dist-dev/` via "Load unpacked" (it ships with an **orange** G icon and talks to `http://localhost:3000` instead of `gitmon.io`, so prod and dev can coexist side-by-side — see [Two builds](#two-builds-dev-vs-prod) below).
 
 ## How it works
 
