@@ -1,0 +1,35 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "npm"
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Generate placeholder icons
+        run: npm run icons
+
+      - name: Typecheck
+        run: npm run typecheck
+
+      - name: Build (prod)
+        run: npm run build
+
+      - name: Verify manifest
+        run: |
+          test -f dist/manifest.json
+          node -e "const m = require('./dist/manifest.json'); if (m.name !== 'GitMon — Your Coding Pet') throw new Error('prod name mismatch'); if (!m.host_permissions.includes('https://gitmon.io/*')) throw new Error('missing gitmon.io host'); if (!m.host_permissions.includes('https://github.com/*')) throw new Error('missing github.com host'); console.log('manifest OK: v' + m.version);"
