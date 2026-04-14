@@ -860,7 +860,10 @@ const STYLES = `
    flip or the walk sheet clipping. Filters live on the wrapper so the
    drop shadow + tints still wrap around the clipped content. */
 .gm-wrap[data-state="idle"] .gm-sprite-img {
-  animation: gm-bob 2.8s ease-in-out infinite;
+  /* Idle is fully static — any loop here steals peripheral attention
+     from the user's code. Vitals states (happy/hungry/critical/sleeping)
+     still animate so they remain readable. */
+  animation: none;
 }
 .gm-wrap[data-state="happy"] .gm-sprite-img {
   animation: gm-bounce 0.9s ease-in-out infinite;
